@@ -29,9 +29,11 @@
     'assets/slider/slide-05.mp4'
   ];
   const posterImages = [
-    'assets/pricing/basic-package.webp',
-    'assets/pricing/premium-package.webp',
-    'assets/pricing/vip-package.webp'
+    'assets/slider/video-thumb-01.webp',
+    'assets/slider/video-thumb-02.webp',
+    'assets/slider/video-thumb-03.webp',
+    'assets/slider/video-thumb-04.webp',
+    'assets/slider/video-thumb-05.webp'
   ];
   const captions = [
     'Wedding stories', 'Made to relive', 'Love, in focus', 'Every moment',
@@ -45,14 +47,41 @@
     card.className = 'card';
     card.setAttribute('aria-hidden', 'true');
     const footage = footageSources[shotIndex % footageSources.length];
-    card.innerHTML = '<video muted playsinline preload="none" poster="' + posterImages[shotIndex % posterImages.length] + '" aria-hidden="true"><source src="' + footage + '" type="video/mp4"></video><span class="card-caption">' + captions[shotIndex] + '</span><span class="edge"></span>';
+    card.innerHTML = '<video muted playsinline preload="none" poster="' + posterImages[shotIndex % footageSources.length] + '" aria-hidden="true"></video><span class="card-caption">' + captions[shotIndex] + '</span><span class="edge"></span>';
     gallery.appendChild(card);
-    return { card, video: card.querySelector('video'), index };
+    return { card, video: card.querySelector('video'), footage, index };
   });
 
   let active = 3;
   let direction = 1;
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  function loadClip(item, preload) {
+    const video = item.video;
+    if (video.dataset.source !== item.footage) {
+      video.pause();
+      video.src = item.footage;
+      video.dataset.source = item.footage;
+      video.dataset.clipReady = '';
+      video.preload = preload;
+      video.load();
+    } else if (preload === 'auto' && video.preload !== 'auto') {
+      video.preload = 'auto';
+      video.load();
+    }
+  }
+
+  function releaseClip(item) {
+    const video = item.video;
+    if (!video.dataset.source) return;
+    video.pause();
+    video.removeAttribute('src');
+    video.load();
+    delete video.dataset.source;
+    delete video.dataset.clipReady;
+    delete video.dataset.clipStart;
+    delete video.dataset.clipEnd;
+  }
+
   function prepareClip(item) {
     const video = item.video;
     if (video.dataset.clipReady || !Number.isFinite(video.duration)) return;
@@ -88,12 +117,13 @@
       card.style.filter = distance === 0 ? 'brightness(1)' : 'brightness(' + (1 - Math.min(distance * .11, .27)) + ')';
 
       const video = item.video;
-      prepareClip(item);
-      if (distance <= 3 && !reduceMotion.matches) {
+      if (reduceMotion.matches) {
+        releaseClip(item);
+      } else {
+        loadClip(item, 'auto');
+        prepareClip(item);
         if (video.dataset.clipReady && video.currentTime < Number(video.dataset.clipStart)) video.currentTime = Number(video.dataset.clipStart);
         video.play().catch(() => {});
-      } else {
-        video.pause();
       }
     });
   }
@@ -101,7 +131,7 @@
   cards.forEach((item) => {
     item.video.addEventListener('loadedmetadata', () => {
       prepareClip(item);
-      layoutGallery();
+      if (!reduceMotion.matches) item.video.play().catch(() => {});
     });
     item.video.addEventListener('timeupdate', () => {
       const end = Number(item.video.dataset.clipEnd);
