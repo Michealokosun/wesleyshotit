@@ -1,4 +1,10 @@
 (() => {
+  window.addEventListener('load', () => {
+    document.querySelectorAll('link[data-async-fonts]').forEach((stylesheet) => {
+      stylesheet.media = 'all';
+    });
+  }, { once: true });
+
   const images = [...document.querySelectorAll('.gallery-mosaic img, .gallery-page-card img')];
   if (!images.length) return;
 
@@ -28,7 +34,7 @@
   function showImage(index) {
     activeIndex = (index + images.length) % images.length;
     const source = images[activeIndex];
-    largeImage.src = source.currentSrc || source.src;
+    largeImage.src = source.dataset.largeSrc || source.currentSrc || source.src;
     largeImage.alt = source.alt;
     caption.textContent = source.alt;
     counter.textContent = `${activeIndex + 1} / ${images.length}`;

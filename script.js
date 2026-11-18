@@ -1,6 +1,12 @@
 (function () {
   'use strict';
 
+  window.addEventListener('load', function () {
+    document.querySelectorAll('link[data-async-fonts]').forEach(function (stylesheet) {
+      stylesheet.media = 'all';
+    });
+  }, { once: true });
+
   function makeStars(el, count, blur, min, max) {
     const shadows = [];
     for (let i = 0; i < count; i++) {
@@ -16,17 +22,16 @@
   makeStars(document.getElementById('stB'), 14, 1.2, 0.25, 0.5);
 
   const footageSources = [
-    'assets/22e8fce546c6445e8804faa3fa37e0b6 (1).mp4',
-    'assets/d848d0ad05074adeafd42ae1685bf515.mp4',
-    'assets/hero-background.mp4',
-    'assets/389c1080ad7e41f6b46335c2be422b5c_QN27j0PJ.mp4',
-    'assets/47ca88de85f24277bfa5f304557b97aa_ELF7aecp.mp4',
-    'assets/e61addc916a84740947f1137e0b2298b_Q0nIztmz.mp4'
+    'assets/slider/slide-01.mp4',
+    'assets/slider/slide-02.mp4',
+    'assets/slider/slide-03.mp4',
+    'assets/slider/slide-04.mp4',
+    'assets/slider/slide-05.mp4'
   ];
   const posterImages = [
-    'assets/pricing/basic-package.jpg',
-    'assets/pricing/premium-package.jpg',
-    'assets/pricing/vip-package.jpg'
+    'assets/pricing/basic-package.webp',
+    'assets/pricing/premium-package.webp',
+    'assets/pricing/vip-package.webp'
   ];
   const captions = [
     'Wedding stories', 'Made to relive', 'Love, in focus', 'Every moment',
