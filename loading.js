@@ -18,7 +18,11 @@
       window.setTimeout(() => {
         screen.classList.add('is-hidden');
         document.body.classList.remove('is-loading');
-        window.setTimeout(() => screen.remove(), 600);
+        window.setTimeout(() => {
+          screen.remove();
+          document.body.classList.add('page-revealed');
+          window.dispatchEvent(new Event('site:revealed'));
+        }, 600);
       }, 320);
     }, wait);
   }
