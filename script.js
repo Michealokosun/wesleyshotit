@@ -55,6 +55,14 @@
   let active = 3;
   let direction = 1;
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  let warmupTimer = null;
+  let scheduledWarmupFor = null;
+  function nextActiveIndex() {
+    if (active >= 9) return active - 1;
+    if (active <= 3) return active + 1;
+    return active + direction;
+  }
+
   function loadClip(item, preload) {
     const video = item.video;
     if (video.dataset.source !== item.footage) {
@@ -119,19 +127,35 @@
       const video = item.video;
       if (reduceMotion.matches) {
         releaseClip(item);
-      } else {
+      } else if (index === active) {
         loadClip(item, 'auto');
         prepareClip(item);
         if (video.dataset.clipReady && video.currentTime < Number(video.dataset.clipStart)) video.currentTime = Number(video.dataset.clipStart);
         video.play().catch(() => {});
+      } else if (index === nextActiveIndex()) {
+        loadClip(item, 'metadata');
+        prepareClip(item);
+      } else {
+        releaseClip(item);
       }
     });
+
+    if (reduceMotion.matches) {
+      window.clearTimeout(warmupTimer);
+      scheduledWarmupFor = null;
+    } else if (scheduledWarmupFor !== active) {
+      window.clearTimeout(warmupTimer);
+      scheduledWarmupFor = active;
+      warmupTimer = window.setTimeout(() => {
+        loadClip(cards[nextActiveIndex()], 'auto');
+      }, 1800);
+    }
   }
 
   cards.forEach((item) => {
     item.video.addEventListener('loadedmetadata', () => {
       prepareClip(item);
-      if (!reduceMotion.matches) item.video.play().catch(() => {});
+      if (item.index === active && !reduceMotion.matches) item.video.play().catch(() => {});
     });
     item.video.addEventListener('timeupdate', () => {
       const end = Number(item.video.dataset.clipEnd);
@@ -152,5 +176,8 @@
       layoutGallery();
     }, 10000);
   }
-  reduceMotion.addEventListener?.('change', layoutGallery);
+  reduceMotion.addEventListener?.('change', () => {
+    scheduledWarmupFor = null;
+    layoutGallery();
+  });
 })();
